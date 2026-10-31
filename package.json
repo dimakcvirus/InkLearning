@@ -1,0 +1,22 @@
+{
+  "name": "ink-learning",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx index.jsx"
+  },
+  "keywords": [],
+  "type": "module",
+  "dependencies": {
+    "ink": "^7.1.1",
+    "mapscii": "^0.3.1",
+    "react": "^19.2.0",
+    "undici": "^8.12.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.12",
+    "vite": "^8.2.2"
+  }
+}
