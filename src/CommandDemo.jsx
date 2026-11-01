@@ -2,7 +2,7 @@ import React from "react";
 import { spawn } from 'node:child_process';
 import { useState, useEffect, useRef } from "react";
 import { useStdout } from 'ink';
-import { getContainers } from './dockerApi.js'
+import { getContainers, closeDocker } from './dockerApi.js'
 import { Box, Text, useInput } from 'ink';
 
 export const CommandDemo = () => {
@@ -61,6 +61,7 @@ export const CommandDemo = () => {
 		return () => {
 
 			clearInterval(intervalId)
+			closeDocker()
 		}
 
 	}, []);
