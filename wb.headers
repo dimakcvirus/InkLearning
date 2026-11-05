@@ -1,0 +1,16 @@
+HTTP/2 498 
+date: Tue, 03 Nov 2026 14:07:49 GMT
+content-type: text/html
+status-no-id: PG-04-DO
+server: wbaas
+x-request-id: 535e192c0e7ebca89d4514c168aafe47
+report-to: { "group": "nel", "max_age": 604800, "endpoints": [{"url": "https://nel.wb.ru/reports"}] }, { "group": "csp", "max_age": 604800, "endpoints": [{"url": "https://nel.wb.ru/csp"}] }
+nel: { "report_to": "nel", "max_age": 604800, "include_subdomains": false, "success_fraction": 0.0, "failure_fraction": 1.0 }
+content-security-policy-report-only: script-src  'unsafe-eval' 'unsafe-inline' 'self' 'report-sample' https://wb.ru https://*.wb.ru https://rwb.ru https://*.rwb.ru https://wildberries.ru https://*.wildberries.ru https://wb-basket.ru https://*.wb-basket.ru https://wbbasket.ru https://*.wbbasket.ru https://wbcontent.net https://*.wbcontent.net https://api-maps.yandex.ru https://yastatic.net https://wibes.ru https://*.wibes.ru https://7c6f0c1e-2b5d-4b11-9b4f-4d7d8f1e9a3a.wb.ru; worker-src 'self' blob: https://*.wbbasket.ru https://*.wbcontent.net; report-uri https://nel.wb.ru/csp; report-to csp;
+strict-transport-security: max-age=31536000; preload; always
+x-content-type-options: nosniff
+x-frame-options: DENY always
+x-wbaas-token: get
+x-guardium-token: get
+alt-svc: h3=":443"; ma=86400
+

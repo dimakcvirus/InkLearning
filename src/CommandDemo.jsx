@@ -1,9 +1,9 @@
 import React from "react";
-import { spawn } from 'node:child_process';
 import { useState, useEffect, useRef } from "react";
 import { useStdout } from 'ink';
 import { getContainers, closeDocker } from './dockerApi.js'
 import { Box, Text, useInput } from 'ink';
+import { Spiner } from "./Spiner.jsx";
 
 export const CommandDemo = () => {
 	const [output, setOutput] = useState('');
@@ -11,9 +11,12 @@ export const CommandDemo = () => {
 	const [containers, setContainers] = useState([]);
 	const { stdout } = useStdout();
 	const [terminalWidh, setTerminalWidh] = useState(stdout.columns)
+	const [selectedId, setSelectedId] = useState(null)
 
 
 	const isLoadingRef = useRef(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const isLoadController = useRef(null);
 
 	const availableWidth = terminalWidh
 	const widthName = availableWidth * 0.25
@@ -22,6 +25,7 @@ export const CommandDemo = () => {
 	const widthState = availableWidth * 0.15
 
 	console.log('terminalWidh', terminalWidh);
+
 
 	const handleResize = () => {
 
@@ -34,23 +38,45 @@ export const CommandDemo = () => {
 			return
 		}
 		try {
+			const controller = new AbortController();
+			isLoadController.current = controller
 			isLoadingRef.current = true
-			const data = await getContainers();
+			setIsLoading(true)
+			setStatus('обновление')
+			// задержка на ответ от сервр	
+			//		await new Promise(resolve => setTimeout(resolve, 5000));
+			const data = await getContainers(isLoadController.current.signal);
 			setContainers(data)
-			setStatus('Готово');
-			console.log(data)
+			if (data && data.length && selectedId === null) {
+				setSelectedId(data[0].ID)
+			}
+			const exists = data.some((element) => {
+				return selectedId === element.ID
 
+			})
+			if (exists === false) {
+
+				setSelectedId(data[0].ID)
+			}
+			setStatus('Готово');
 		} catch (error) {
+			if (error.name === 'AbortError') {
+
+				return
+
+			}
 			setStatus("Ошибка Загрузки Docker");
 			setOutput(error.message)
 
 		} finally {
 			isLoadingRef.current = false
+			setIsLoading(false)
 
 		}
 	}
 
 	useEffect(() => {
+
 		load()
 
 		const intervalId = setInterval(() => {
@@ -59,8 +85,13 @@ export const CommandDemo = () => {
 		}, 5000)
 
 		return () => {
-
 			clearInterval(intervalId)
+
+			if (!isLoadController.current) {
+				return
+			}
+
+			isLoadController.current.abort();
 			closeDocker()
 		}
 
@@ -82,12 +113,31 @@ export const CommandDemo = () => {
 		if (input === 'r') {
 			load()
 		}
+		if (key.upArrow) {
+			if (selectedId !== 0) {
+				setSelectedId(previous => {
+
+					return previous - 1
+				})
+			}
+
+		}
+		if (key.downArrow) {
+			if (selectedId < containers.length - 1) {
+				setSelectedId(previous => {
+					return previous + 1
+
+				})
+			}
+
+		}
 	})
 
 	return (
 		<Box flexDirection='column'>
 			<Text>{status}</Text>
 			<Text>{terminalWidh}</Text>
+			{isLoading && <Box flexDirection="row"><Spiner /><Text>Загрузка контейнеров...</Text></Box>}
 			<Text>Доступно для колонок : {availableWidth}</Text>
 			<Text>
 				{output}
@@ -103,24 +153,29 @@ export const CommandDemo = () => {
 					<Text color='grey'>---------------------------------------------------------------------------------------------------</Text>
 					{
 						[...containers].sort((a, b) => {
-							console.log("a.State", a.State.localeCompare(), "b.State", b.State.localeCompare())
 							if (a.State === b.State) return 0;
 							if (a.State === 'running') return -1;
 							if (b.State === 'running') return 1;
 							return 0;
-						}).map(container => {
+						}).map((container, index) => {
 							return <Box key={container.ID} flexDirection="row" gap={2}>
-								<Box width={widthName} ><Text >Имя:{container.Name}</Text></Box>
-								<Box width={widthImage}><Text>Образ:{container.Image}</Text></Box>
-								<Box width={widthStatus}><Text color={container.State === 'running' ? 'green' : container.State === 'exited' ? 'red' : 'yellow'}  >Статус:{container.Status}</Text></Box>
-								<Box width={widthState}><Text> State:{container.State}</Text></Box>
+								<Box width={widthName} backgroundColor={index === selectIndex ? 'yellow' : ''} ><Text >Имя:{container.Name}</Text></Box>
+								<Box width={widthImage} backgroundColor={index === selectIndex ? 'yellow' : ''}><Text>Образ:{container.Image}</Text></Box>
+								<Box width={widthStatus} backgroundColor={index === selectIndex ? 'yellow' : ''}><Text color={container.State === 'running' ? 'green' : container.State === 'exited' ? 'red' : 'yellow'}  >Статус:{container.Status}</Text></Box>
+								<Box width={widthState} backgroundColor={index === selectIndex ? 'yellow' : ''}><Text> State:{container.State}</Text></Box>
 							</Box>
 						})
 					}
 				</Box>
 			) : (<Box flexDirection="column">
 				{
-					containers.map(container => {
+					[...containers].sort((a, b) => {
+						if (a.State === b.State) return 0;
+						if (a.State === 'running') return -1;
+						if (b.State === 'running') return 1;
+						return 0;
+
+					}).map(container => {
 						return <Box key={container.ID} flexDirection="column" gap={1} borderStyle='round'>
 							<Box width={widthName} ><Text >Имя:{container.Name}</Text></Box>
 							<Box width={widthImage}><Text>Образ:{container.Image}</Text></Box>
